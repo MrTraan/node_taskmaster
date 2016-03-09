@@ -1,0 +1,23 @@
+[
+    {
+        "name": "listener",
+        "cmd": "echo bonjour",
+        "numprocs": 1
+    },
+    {
+        "name": "neverending",
+        "cmd": "./ticker",
+        "numprocs": 1,
+        "umask": "0222",
+        "autostart": true,
+        "autorestart": "never",
+        "exitcodes": [2],
+        "startretries": 3,
+        "starttime": 5,
+        "stopsignal": "SIGKILL",
+        "stoptime": 10,
+        "stdout": "/tmp/foo",
+        "stderr": "/tmp/bar",
+        "env" : ["MyKey=MyValue", "foo=bar"]
+    }
+]
