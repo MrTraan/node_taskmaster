@@ -1,8 +1,16 @@
 [
     {
-        "name": "listener",
-        "cmd": "echo bonjour",
-        "numprocs": 1
+        "name": "umask",
+        "cmd": "umask",
+        "numprocs": 1,
+        "stdout" : "stdout",
+        "umask" : "077"
+    },
+    {
+        "name": "ping",
+        "cmd": "umask",
+        "numprocs": 1,
+        "stdout" : "stdout"
     },
     {
         "name": "neverending",
@@ -18,6 +26,9 @@
         "stoptime": 10,
         "stdout": "/tmp/foo",
         "stderr": "/tmp/bar",
-        "env" : ["MyKey=MyValue", "foo=bar"]
+        "env" : {
+            "MyKey": "MyValue",
+            "foo": "bar"
+        }
     }
 ]

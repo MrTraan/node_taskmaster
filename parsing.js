@@ -6,23 +6,22 @@ const tmlogs = require("./tmlogs");
 function readConfigFile(filename, callback){
     fs.readFile("conf.json", (err, data) => {
         if (err) throw err;
-        var conf = JSON.parse(data);
-        for (var i = 0; i < conf.length; i++){
-            if (conf[i].umask != undefined)
-                conf[i].umask = parseInt(conf[i].umask, 8);
-        }
-        parseCmd(conf);
+        var json = JSON.parse(data);
+        var conf = [];
+        json.forEach((entry) => { 
+            conf.push(new Conf(entry));
+        });
         callback(conf);
     });
 }
 module.exports.readConfigFile = readConfigFile;
 
-function parseCmd(conf){
-    for (var i = 0; i < conf.length; i++){
-        conf[i].cmd = conf[i].cmd.split(" ");
-        if (conf[i].cmd[0].charAt(0) != "/" && conf[i].cmd[0].charAt(0) != ".")
-            conf[i].cmd[0] = findPath(conf[i].cmd[0]);
-    }
+function parseCmd(cmd){
+        av = cmd.split(" ");
+        if (av[0].charAt(0) != "/" && av[0].charAt(0) != ".") {
+            av[0] = findPath(av[0]);
+        }
+        return (av);
 }
 
 function findPath(cmd) {
@@ -32,4 +31,21 @@ function findPath(cmd) {
             return (path.join(pathF[i], cmd));
     }
     return (cmd);
+}
+
+function Conf(json) {
+    this.name = (json.name != undefined ? json.name : "");
+    this.cmd = (json.cmd != undefined ? parseCmd(json.cmd) : ["/bin/echo", json.name, "need a valid cmd"]);
+    this.numprocs = (json.numprocs != undefined ? json.numprocs : 1);
+    this.umask = (json.umask != undefined ? parseInt(json.umask, 8) : 0o22);
+    this.autostart = (json.autostart != undefined ? json.autostart : false);
+    this.autorestart = (json.autorestart != undefined ? json.autorestart : "never");
+    this.exitcodes = (json.exitcodes != undefined ? json.exitcodes : [0]);
+    this.startretries = (json.startretries != undefined ? json.startretries : 0);
+    this.starttime = (json.starttime != undefined ? json.starttime : 0);
+    this.stopsignal = (json.stopsignal != undefined ? json.stopsignal : "SIGHUP");
+    this.stoptime = (json.stoptime != undefined ? json.stoptime : 0);
+    this.stdout = (json.stdout != undefined ? json.stdout : "/dev/null");
+    this.stderr = (json.stderr != undefined ? json.stderr : "/dev/null");
+    this.env = (json.env != undefined ? json.env : process.env);
 }

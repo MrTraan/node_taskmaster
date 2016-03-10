@@ -9,26 +9,34 @@ function Process(config){
     this.running = false;
     this.lastExitCode = 0;
     this.child = {};
-    if (config.stdout != undefined){
+    if (config.stdout != "stdout"){
         this.stdout = fs.createWriteStream(config.stdout, {flags: "a+"});
     }
     else {
         this.stdout = process.stdout;
     }
-    if (config.stderr != undefined){
+    if (config.stderr != "stderr"){
         this.stderr = fs.createWriteStream(config.stderr, {flags: "a+"});
     }
     else {
         this.stderr = process.stderr;
     }
-    this.start = function() {
-        if (config.cmd === undefined)
-            return (undefined) //need to log error
+    this.status = function () {
+        return (this.name + " is " + (this.running ? "running" : "stopped"))
+    }
+    this.start = function(callback) {
+        if (callback === undefined) {
+            callback = function(){};
+        }
+        if (config.cmd === undefined) {
+            callback(undefined, "No such command");
+        }
+        var oldmask = process.umask(this.config.umask);
         var child = cp.spawn(this.config.cmd[0], this.config.cmd.slice(1));
         tmlogs.logProcStart(this.name);
         this.running = true;
         this.child = child;
-        
+        process.umask(oldmask);
         child.stdout.on('data', (data) => {
             this.stdout.write(this.name + " stdout: " + data);
         });
@@ -46,11 +54,15 @@ function Process(config){
                 this.start();
             }
         });
-        return (child);    
+        callback(child, undefined);
     }
-    this.stop = function () {
-        if (this.running == false || Object.keys(this.child).length == 0) {
+    this.stop = function (callback) {
+        if (callback === undefined) {
+            callback = function(){};
+        }
+        if (this.running == false) {
             console.log(`Task ${this.name} is not running`);
+            callback();
             return;
         }
         if (this.config.stopsignal != undefined) {
@@ -58,11 +70,13 @@ function Process(config){
         } else {
             this.child.kill("SIGHUP");
         }
-        this.running = false;
+        //this.running = false;
+        callback();
     }
     this.restart = function () {
-        this.stop();
-        this.start();
+        this.stop(() => {
+           this.start(); 
+        });
     }
     if (config.autostart == true)
         this.start();
